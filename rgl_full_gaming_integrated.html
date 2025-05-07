@@ -1,0 +1,463 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBfjJjko1_Fi6aAVSH9EKY3cy7H9Kx5P50",
+  authDomain: "rgl33-46208.firebaseapp.com",
+  databaseURL: "https://rgl33-46208-default-rtdb.firebaseio.com",
+  projectId: "rgl33-46208",
+  storageBucket: "rgl33-46208.appspot.com",
+  messagingSenderId: "44519193293",
+  appId: "1:44519193293:web:1eacc378276d8c71814984",
+  measurementId: "G-EQJE4BBHF5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function addTransaction(desc, amount) {
+  const date = new Date().toLocaleString();
+  db.ref('transactions').push({ desc, amount, date })
+    .then(() => alert('✅ تمت الإضافة!'))
+    .catch((error) => alert('❌ خطأ: ' + error.message));
+}
+
+function loadTransactions() {
+  db.ref('transactions').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      Object.values(data).forEach(t => {
+        console.log(`${t.desc}: ${t.amount} DH (${t.date})`);
+      });
+    } else {
+      console.log("⛔ لا توجد معاملات بعد.");
+    }
+  });
+}
+</script>
+
+
+  
+
+  <meta charset="UTF-8">
+  <title>RGL Gaming Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2f; color: #fff; display: flex; min-height: 100vh; }
+    aside { width: 250px; background: #111; display: flex; flex-direction: column; padding: 20px; }
+    aside h2 { margin-bottom: 20px; font-size: 1.8em; text-align: center; color: #9c27b0; text-shadow: 0 0 10px #9c27b0; }
+    aside button { background: #222; border: none; color: #fff; padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+    aside button:hover { background: #9c27b0; box-shadow: 0 0 10px #9c27b0; }
+    main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    section { background: #2c2c3a; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: none; flex-direction: column; gap: 15px; }
+    section.active { display: flex; }
+    input, select, button, textarea { padding: 10px; border-radius: 8px; border: none; width: 100%; margin-bottom: 10px; }
+    button.add-btn { background: #9c27b0; color: white; }
+    button.add-btn:hover { background: #ba68c8; box-shadow: 0 0 10px #ba68c8; }
+    .item, .credit-item, .client-card { padding: 10px; border-radius: 8px; margin: 5px 0; background: #3a3a4d; }
+    .income-item { background: #4caf50; color: white; }
+    .expense-item { background: #f44336; color: white; }
+    .completed { background: #81c784; text-decoration: line-through; }
+    .archived { opacity: 0.6; text-decoration: line-through; }
+    .they-owe { color: #4caf50; }
+    .you-owe { color: #f44336; }
+    .dashboard-card { background: #9c27b0; color: white; padding: 15px; border-radius: 12px; text-align: center; font-size: 1.2em; box-shadow: 0 0 15px #9c27b0; }
+    .action-btn { margin: 2px; padding: 5px 10px; border-radius: 6px; cursor: pointer; border: none; color: white; }
+    .edit-btn { background: #2196f3; }
+    .delete-btn { background: #f44336; }
+    .addmoney-btn { background: #4caf50; }
+    .submoney-btn { background: #ff9800; }
+  </style>
+</head>
+<body>
+
+<aside>
+  <h2>🎮 RGL Gaming</h2>
+  <button onclick="showSection('dashboard')">🏆 Dashboard</button>
+  <button onclick="showSection('transactions')">💰 معاملات</button>
+  <button onclick="showSection('clients')">👤 زبناء</button>
+  <button onclick="showSection('tasks')">✅ مهام</button>
+  <button onclick="showSection('credits')">💳 كريدي</button>
+</aside>
+à
+
+<main>
+  
+<section id="dashboard" class="active">
+  <h2>🏆 Dashboard</h2>
+  <div class="dashboard-card" id="summary-dashboard"></div>
+</section>
+
+<section id="transactions">
+  <h2>💰 المعاملات</h2>
+  <input type="text" id="desc" placeholder="الوصف" />
+  <input type="number" id="amount" placeholder="المبلغ" />
+  <select id="type">
+    <option value="income">مدخول</option>
+    <option value="expense">خسارة</option>
+  </select>
+  <button class="add-btn" onclick="addTransaction()">➕ إضافة</button>
+  <h3>✅ المدخولات</h3>
+  <div id="income-list"></div>
+  <h3>❌ الخسائر</h3>
+  <div id="expense-list"></div>
+</section>
+
+<section id="clients">
+  <h2>👤 زبناء</h2>
+  <input type="text" id="client-name" placeholder="الإسم" />
+  <input type="text" id="client-phone" placeholder="رقم الهاتف" />
+  <input type="text" id="client-note" placeholder="ملاحظة" />
+  <select id="client-type">
+    <option value="new">جديد</option>
+    <option value="returning">قديم</option>
+  </select>
+  <input type="text" id="client-next" placeholder="الخدمة القادمة" />
+  <button class="add-btn" onclick="addClient()">➕ إضافة</button>
+  <div id="client-list"></div>
+</section>
+
+<section id="tasks">
+  <h2>✅ المهام</h2>
+  <input type="text" id="task-name" placeholder="وصف المهمة" />
+  <button class="add-btn" onclick="addTask()">➕ إضافة</button>
+  <div id="task-list"></div>
+</section>
+
+<section id="credits">
+  <h2>💳 الكريدي</h2>
+  <input type="text" id="credit-name" placeholder="الإسم" />
+  <input type="number" id="credit-amount" placeholder="المبلغ" />
+  <select id="credit-type">
+    <option value="they_owe_me">أنا كنسالو</option>
+    <option value="i_owe_them">هو كيسالني</option>
+  </select>
+  <button class="add-btn" onclick="addCredit()">➕ إضافة</button>
+  <div id="credit-list"></div>
+</section>
+</main>
+
+<script>
+  
+  let transactions = [], clients = [], tasks = [], credits = [];
+  
+  window.onload = function() {
+  loadTransactions();
+  loadClients();
+  loadTasks();
+  loadCredits();
+};
+
+  
+  function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    updateDashboard();
+  }
+  
+  function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(utterance);
+  }
+  
+  function addTransaction() {
+  const desc = document.getElementById("desc").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const type = document.getElementById("type").value;
+  const date = new Date().toLocaleString();
+
+  if (!desc || isNaN(amount)) return alert("عمر البيانات");
+
+  db.ref('transactions').push({ desc, amount, type, date })
+    .then(() => {
+      document.getElementById("desc").value = '';
+      document.getElementById("amount").value = '';
+      loadTransactions(); // باش نعاود نجيب البيانات
+      updateDashboard();
+      speak('✅ تمت إضافة المعاملة!');
+    })
+    .catch((error) => alert('❌ خطأ: ' + error.message));
+}
+function loadTransactions() {
+  db.ref('transactions').once('value').then(snapshot => {
+    transactions = [];
+    snapshot.forEach(childSnapshot => {
+      transactions.push(childSnapshot.val());
+    });
+    renderTransactions();
+    updateDashboard();
+  });
+}
+function loadClients() {
+  db.ref('clients').once('value').then(snapshot => {
+    clients = [];
+    snapshot.forEach(childSnapshot => {
+      clients.push(childSnapshot.val());
+    });
+    renderClients();
+    updateDashboard();
+  });
+}
+function loadTasks() {
+  db.ref('tasks').once('value').then(snapshot => {
+    tasks = [];
+    snapshot.forEach(childSnapshot => {
+      tasks.push(childSnapshot.val());
+    });
+    renderTasks();
+    updateDashboard();
+  });
+}
+function loadCredits() {
+  db.ref('credits').once('value').then(snapshot => {
+    credits = [];
+    snapshot.forEach(childSnapshot => {
+      credits.push(childSnapshot.val());
+    });
+    renderCredits();
+    updateDashboard();
+  });
+}
+
+  
+  function renderTransactions() {
+  const incomeList = document.getElementById("income-list");
+  const expenseList = document.getElementById("expense-list");
+  incomeList.innerHTML = "";
+  expenseList.innerHTML = "";
+  transactions.forEach((t, i) => {
+    const item = '<div class="item ' + (t.type === 'income' ? 'income-item' : 'expense-item') + '">' + 
+      t.desc + ': ' + t.amount + ' DH (' + t.date + ') ' +
+      '<button class="action-btn delete-btn" onclick="deleteTransaction(' + i + ')">🗑</button></div>';
+    if (t.type === 'income') incomeList.innerHTML += item;
+    else expenseList.innerHTML += item;
+  });
+}
+  
+  function addClient() {
+    const name = document.getElementById("client-name").value;
+    const phone = document.getElementById("client-phone").value;
+    const note = document.getElementById("client-note").value;
+    const type = document.getElementById("client-type").value;
+    const next = document.getElementById("client-next").value;
+    const date = new Date().toLocaleString();
+    if (!name) return alert("عمر البيانات");
+    clients.push({ name, phone, note, type, next, date });
+    localStorage.setItem('clients', JSON.stringify(clients));
+    renderClients();
+    speak('✅ تمت إضافة الزبون!');
+  }
+  
+  function renderClients() {
+  const list = document.getElementById("client-list");
+  list.innerHTML = clients.map((c, i) => 
+    '<div class="client-card">' + c.name + ' (' + c.phone + ')<br>نوع: ' + c.type +
+    '<br>ملاحظة: ' + c.note + '<br>خدمة قادمة: ' + c.next + '<br>📅 ' + c.date +
+    ' <button class="action-btn delete-btn" onclick="deleteClient(' + i + ')">🗑</button></div>'
+  ).join('');
+}
+
+  
+function renderTasks() {
+  const list = document.getElementById("task-list");
+  list.innerHTML = tasks.map((t, i) =>
+    '<div class="item ' + (t.done ? 'completed' : '') + '">' +
+    '<input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggleTask(' + i + ')"> ' +
+    t.taskName +
+    ' <button class="action-btn delete-btn" onclick="deleteTask(' + i + ')">🗑</button></div>'
+  ).join('');
+}
+function addTask() {
+  const taskName = document.getElementById("task-name").value;
+  if (!taskName) return alert("عمر المهمة");
+  tasks.push({ taskName, done: false });
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderTasks();
+  updateDashboard();
+  speak('✅ تمت إضافة المهمة!');
+
+  // مسح الفورم بعد الإضافة
+  document.getElementById("task-name").value = '';
+}
+
+function renderTasks() {
+  const list = document.getElementById("task-list");
+  list.innerHTML = tasks.map((t, i) =>
+    '<div class="item ' + (t.done ? 'completed' : '') + '">' +
+    '<input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggleTask(' + i + ')"> ' +
+    t.taskName +
+    ' <button class="action-btn delete-btn" onclick="deleteTask(' + i + ')">🗑</button>' +
+    '</div>'
+  ).join('');
+}
+function toggleTask(index) {
+  tasks[index].done = !tasks[index].done;
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderTasks();
+  updateDashboard();
+}
+
+  
+  function toggleTask(index) {
+    list.innerHTML = tasks.map((t, i) => '<div class="item ' + (t.done ? 'completed' : '') + '"><input type="checkbox" ' + (t.done ? 'checked' : '') + ' onchange="toggleTask(' + i + ')"> ' + t.taskName + ' <button class="action-btn delete-btn" onclick="deleteTask(' + i + ')">🗑</button></div>').join('');
+    tasks[index].done = !tasks[index].done;
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+  }
+  
+  function renderCredits() {
+  const list = document.getElementById("credit-list");
+  list.innerHTML = credits.map((c, i) => 
+    '<div class="credit-item">' +
+    '<strong>' + c.name + '</strong> - <span class="' + 
+    (c.type === 'they_owe_me' ? 'they-owe' : 'you-owe') + '">' +
+    c.amount + ' DH</span> (' + 
+    (c.type === 'they_owe_me' ? 'أنا كنسالو' : 'هو كيسالني') + ') ' +
+    '<button class="action-btn addmoney-btn" onclick="modifyCredit(' + i + ', \'add\')">+ زيادة</button> ' +
+    '<button class="action-btn submoney-btn" onclick="modifyCredit(' + i + ', \'subtract\')">- نقصان</button> ' +
+    '<button class="action-btn delete-btn" onclick="deleteCredit(' + i + ')">🗑 حذف</button>' +
+    '</div>'
+  ).join('');
+} 
+function renderCredits() {
+  const list = document.getElementById("credit-list");
+  list.innerHTML = credits.map((c, i) =>
+    '<div class="credit-item">' +
+    '<strong>' + c.name + '</strong> - <span class="' +
+    (c.type === 'they_owe_me' ? 'they-owe' : 'you-owe') + '">' +
+    c.amount + ' DH</span> (' +
+    (c.type === 'they_owe_me' ? 'أنا كنسالو' : 'هو كيسالني') + ') ' +
+    '<button class="action-btn addmoney-btn" onclick="modifyCredit(' + i + ', &quot;add&quot;)">+ زيادة</button> ' +
+    '<button class="action-btn submoney-btn" onclick="modifyCredit(' + i + ', &quot;subtract&quot;)">- نقصان</button> ' +
+    '<button class="action-btn delete-btn" onclick="deleteCredit(' + i + ')">🗑 حذف</button>' +
+    '</div>'
+  ).join('');
+}
+function modifyCredit(index, action) {
+  const amount = parseFloat(prompt("المبلغ:"));
+  if (isNaN(amount)) return alert("أدخل مبلغ صحيح");
+
+  if (action === 'add') {
+    credits[index].amount += amount;
+  } else if (action === 'subtract') {
+    credits[index].amount -= amount;
+    if (credits[index].amount < 0) credits[index].amount = 0;
+  }
+
+  localStorage.setItem('credits', JSON.stringify(credits));
+  renderCredits();
+  updateDashboard();
+}
+  
+  function deleteCredit(index) {
+    if (confirm("هل أنت متأكد من الحذف؟")) {
+      credits.splice(index, 1);
+      localStorage.setItem('credits', JSON.stringify(credits));
+      renderCredits();
+    }
+  }
+  
+  function updateDashboard() {
+    const income = transactions.filter(t => t.type === 'income').reduce((a, b) => a + b.amount, 0);
+    const expense = transactions.filter(t => t.type === 'expense').reduce((a, b) => a + b.amount, 0);
+    document.getElementById('summary-dashboard').innerHTML = '✅ المدخول: ' + income + ' DH | ❌ الخسائر: ' + expense + ' DH | 👥 الزبناء: ' + clients.length + ' | ✅ المهام: ' + tasks.length + ' | 💳 الكريدي: ' + credits.length;
+  }
+  updateDashboard();
+  function deleteTransaction(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    transactions.splice(index, 1);
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    renderTransactions();
+    updateDashboard();
+  }
+}
+function deleteClient(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    clients.splice(index, 1);
+    localStorage.setItem('clients', JSON.stringify(clients));
+    renderClients();
+    updateDashboard();
+  }
+}
+function deleteTask(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    tasks.splice(index, 1);
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    renderTasks();
+    updateDashboard();
+  }
+}
+
+function deleteTransaction(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    transactions.splice(index, 1);
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    renderTransactions();
+    updateDashboard();
+  }
+}
+
+function deleteClient(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    clients.splice(index, 1);
+    localStorage.setItem('clients', JSON.stringify(clients));
+    renderClients();
+    updateDashboard();
+  }
+}
+
+function addCredit() {
+  const name = document.getElementById("credit-name").value;
+  const amount = parseFloat(document.getElementById("credit-amount").value);
+  const type = document.getElementById("credit-type").value;
+
+  if (!name || isNaN(amount)) {
+    alert("عمر البيانات");
+    return;
+  }
+
+  credits.push({ name, amount, type });
+  localStorage.setItem('credits', JSON.stringify(credits));
+  renderCredits();
+  updateDashboard();
+  speak('✅ تمت إضافة الكريدي!');
+
+  // مسح الفورم بعد الإضافة
+  document.getElementById("credit-name").value = '';
+  document.getElementById("credit-amount").value = '';
+}
+
+
+function modifyCredit(index, action) {
+  const amount = parseFloat(prompt("المبلغ:"));
+  if (isNaN(amount)) return alert("أدخل مبلغ صحيح");
+  credits[index].amount = action === 'add' ? credits[index].amount + amount : credits[index].amount - amount;
+  localStorage.setItem('credits', JSON.stringify(credits));
+  renderCredits();
+  updateDashboard();
+}
+
+function deleteCredit(index) {
+  if (confirm("هل أنت متأكد من الحذف؟")) {
+    credits.splice(index, 1);
+    localStorage.setItem('credits', JSON.stringify(credits));
+    renderCredits();
+    updateDashboard();
+  }
+}
+  </script>
+  
+
+</body>
+</html>
